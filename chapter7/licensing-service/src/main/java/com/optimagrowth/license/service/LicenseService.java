@@ -117,7 +117,9 @@ public class LicenseService {
 	@CircuitBreaker(name = "licenseService", fallbackMethod = "buildFallbackLicenseList")
 	@RateLimiter(name = "licenseService", fallbackMethod = "buildFallbackLicenseList")
 	@Retry(name = "retryLicenseService", fallbackMethod = "buildFallbackLicenseList")
-	@Bulkhead(name = "bulkheadLicenseService", type= Type.THREADPOOL, fallbackMethod = "buildFallbackLicenseList")
+	// if use thread pool type the return must be subclass of CompletionStage(like CompletableFuture)
+//	@Bulkhead(name = "bulkheadLicenseService", type= Type.THREADPOOL, fallbackMethod = "buildFallbackLicenseList")
+	@Bulkhead(name = "bulkheadLicenseService", fallbackMethod = "buildFallbackLicenseList")
 	public List<License> getLicensesByOrganization(String organizationId) throws TimeoutException {
 		logger.debug("getLicensesByOrganization Correlation id: {}",
 				UserContextHolder.getContext().getCorrelationId());
@@ -127,6 +129,7 @@ public class LicenseService {
 
 	@SuppressWarnings("unused")
 	private List<License> buildFallbackLicenseList(String organizationId, Throwable t){
+		logger.debug("buildFallbackLicenseList - enter fallback", t);
 		List<License> fallbackList = new ArrayList<>();
 		License license = new License();
 		license.setLicenseId("0000000-00-00000");
